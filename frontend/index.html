@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Resume Chatbot</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .chat-header {
+      padding: 15px;
+      background: #2c3e50;
+      color: white;
+      font-size: 20px;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background: #f9f9f9;
+    }
+
+    .message {
+      max-width: 70%;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      background: #3498db;
+      color: white;
+      margin-left: auto;
+    }
+
+    .assistant {
+      background: #ecf0f1;
+      color: #2c3e50;
+      margin-right: auto;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+
+    .chat-input textarea {
+      flex: 1;
+      resize: none;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    🤖 Resume Chatbot (Ollama)
+  </div>
+
+  <div class="chat-messages" id="chat"></div>
+
+  <div class="chat-input">
+    <textarea id="message" placeholder="Type your message..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  const chat = document.getElementById("chat");
+  const textarea = document.getElementById("message");
+
+  function addMessage(text, role) {
+    const div = document.createElement("div");
+    div.className = `message ${role}`;
+    div.innerText = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const message = textarea.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user");
+    textarea.value = "";
+
+    addMessage("Thinking...", "assistant");
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+
+      chat.removeChild(chat.lastChild);
+      addMessage(data.reply, "assistant");
+
+    } catch (err) {
+      chat.removeChild(chat.lastChild);
+      addMessage("❌ Backend not reachable", "assistant");
+    }
+  }
+
+  textarea.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
